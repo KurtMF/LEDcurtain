@@ -67,16 +67,6 @@
 #define WS2811_BRWG	28
 #define WS2811_BGWR	29
 
-#define SK6812_RGB  30  // The WS2811 datasheet documents this way
-#define SK6812_RBG  31
-#define SK6812_GRB  32  // Most LED strips are wired this way
-#define SK6812_GBR  33
-#define SK6812_BRG  34
-#define SK6812_BGR  35
-
-#define SK6812_RGBW 36
-#define SK6812_GRBW 37
-
 #define WS2811_800kHz 0x00	// Nearly all WS2811 are 800 kHz
 #define WS2811_400kHz 0x40	// Adafruit's Flora Pixels
 #define WS2813_800kHz 0x80	// WS2813 are close to 800 kHz but has 300 us frame set delay

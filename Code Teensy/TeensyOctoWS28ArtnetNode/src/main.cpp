@@ -56,35 +56,42 @@ DMAMEM int displayMemory[ledsPerStrip * numPins * 3 / 4];
 int drawingMemory[ledsPerStrip * numPins * 3 / 4];
 
 // Initialize Octo library using FastLED Controller
-OctoWS2811 octo(ledsPerStrip, displayMemory, drawingMemory, SK6812_GRBW | WS2811_800kHz, numPins, pinList);
+OctoWS2811 octo(ledsPerStrip, displayMemory, drawingMemory, WS2811_BRGW | WS2811_800kHz, numPins, pinList);  // TODO:  WS2811_400kHz ou WS2811_800kHz ?
+
 
 template <EOrder RGB_ORDER = RGB,
           uint8_t CHIP = WS2811_800kHz>
-class CTeensy4Controller : public CPixelLEDController<GRB_ORDER, 8, 0xFF>
+class CTeensy4Controller : public CPixelLEDController<RGB_ORDER, 8, 0xFF>
 {
     OctoWS2811 *pocto;
 
-public:
-    CTeensy4Controller(OctoWS2811 *_pocto)
-        : pocto(_pocto){};
+    public:
+        CTeensy4Controller(OctoWS2811 *_pocto) : pocto(_pocto){};
 
-    virtual void init() {}
-    virtual void showPixels(PixelController<RGB_ORDER, 8, 0xFF> &pixels)
-    {
-
-        uint32_t i = 0;
-        while (pixels.has(1))
+        virtual void init() {}
+        virtual void showPixels(PixelController<RGB_ORDER, 8, 0xFF> &pixels)
         {
-            uint8_t r = pixels.loadAndScale0();
-            uint8_t g = pixels.loadAndScale1();
-            uint8_t b = pixels.loadAndScale2();
-            pocto->setPixel(i++, g, r, b);
-            pixels.stepDithering();
-            pixels.advanceData();
-        }
 
-        pocto->show();
-    }
+            uint32_t i = 0;
+            while (pixels.has(1))
+            {
+                uint8_t r = pixels.loadAndScale0();
+                uint8_t g = pixels.loadAndScale1();
+                uint8_t b = pixels.loadAndScale2();
+
+                // Build white from RGB
+                uint8_t w = min(r, min(g, b));
+                r -= w;
+                g -= w;
+                b -= w;
+
+                pocto->setPixel(i++, g, r, b, w);
+                pixels.stepDithering();
+                pixels.advanceData();
+            }
+
+            pocto->show();
+        }
 };
 
 // Artnet settings
