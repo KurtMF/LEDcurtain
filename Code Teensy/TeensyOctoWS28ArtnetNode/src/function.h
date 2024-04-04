@@ -22,7 +22,8 @@ const uint8_t PROGMEM gamma8[] = {
 // Blink some lights from setup(), to confirm upload
 void initTest()
 {
-  #define delaytime 1000
+  const int delaytime = 200;
+  
   for (int i = 0; i < numLeds; i++)
     rgbarray[i] = CRGB::Red;
   FastLED.show();
