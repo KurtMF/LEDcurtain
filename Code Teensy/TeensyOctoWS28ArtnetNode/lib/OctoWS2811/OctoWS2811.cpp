@@ -26,10 +26,18 @@
 
 #if defined(__IMXRT1062__)
 
-#define TH_TL 	1.30e-6	// v1 = 1.20e-6 // v3 = 1.30e-6 // original = 1.25e-6
-#define T0H		0.35e-6	// v1 = 0.30e-6 // v3 = 0.35e-6 // original = 0.30e-6
-#define T1H		0.70e-6 // v1 = 0.60e-6 // v3 = 0.70e-6 // original = 0.75e-6
+#define TH_TL 	1.25e-6	// v1 = 1.20e-6 // v3 = 1.30e-6 // original = 1.25e-6
+#define T0H		0.30e-6	// v1 = 0.30e-6 // v3 = 0.35e-6 // original = 0.30e-6
+#define T1H		0.60e-6 // v1 = 0.60e-6 // v3 = 0.70e-6 // original = 0.75e-6
 
+/* Datasheet SK6812
+T0H = 0.30us +/- 0.15us
+T1H = 0.60us +/- 0.15us
+T0L = 0.90us +/- 0.15us
+T1L = 0.60us +/- 0.15us
+TRESET = 80us
+
+*/
 // Ordinary RGB data is converted to GPIO bitmasks on-the-fly using
 // a transmit buffer sized for 2 DMA transfers.  The larger this setting,
 // the more interrupt latency OctoWS2811 can tolerate, but the transmit
