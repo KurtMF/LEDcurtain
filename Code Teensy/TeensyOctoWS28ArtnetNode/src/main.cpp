@@ -21,7 +21,26 @@
 
 // To help with logevity of LEDs and Octo Board
 // Brightness is set to ~50%
-#define BRIGHTNESS 255
+#define BRIGHTNESS 55
+
+ /*
+  COLOR_CORRECTION
+    TypicalLEDStrip=    0xFFB0F0     255, 176, 240 
+    Typical8mmPixel=    0xFFE08C     255, 224, 140 
+    TypicalPixelString= 0xFFE08C     255, 224, 140 
+    UncorrectedColor=   0xFFFFFF     255, 255, 255 
+  */
+
+#define COLOR_CORRECTION TypicalLEDStrip
+
+uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b)
+{
+      uint8_t w = min(r, min(g, b));
+      r -= w;
+      g -= w;
+      b -= w;
+      return w;
+}
 
 // Throttling refresh for when using 24+ universes
 // ie. 510 leds / 3 universes per pin
@@ -108,34 +127,8 @@ public:
       uint8_t r = pixels.loadAndScale0();
       uint8_t g = pixels.loadAndScale1();
       uint8_t b = pixels.loadAndScale2();
-      /*
-      Serial.println(" --- RGB BEFORE WHITE ----");
-      Serial.println("R :");
-      Serial.println(r);
-      Serial.println("G :");
-      Serial.println(g);
-      Serial.println("B :");
-      Serial.println(b);
-      */
-      // Build white from RGB
-      uint8_t w = min(r, min(g, b));
-/*
-      r -= w;
-      g -= w;
-      b -= w;
-*/
-/*
-      Serial.println(" --- RGB AFTER WHITE ----");
-      Serial.println("R :");
-      Serial.println(r);
-      Serial.println("G :");
-      Serial.println(g);
-      Serial.println("B :");
-      Serial.println(b);
-      Serial.println("W :");
-      Serial.println(w);
-      */
-      pocto->setPixel(i++, r, g, b, w);
+      pocto->setPixel(i++, r, g, b, white_from_rgb(r,g,b));
+
       pixels.stepDithering();
       pixels.advanceData();
     }
@@ -255,8 +248,9 @@ void setup()
   octo.begin();
   Serial.println("octo.begin");
   pcontroller = new CTeensy4Controller<RGB, WS2811_800kHz>(&octo);
+
   FastLED.setBrightness(BRIGHTNESS);
-  FastLED.addLeds(pcontroller, rgbarray, numPins * ledsPerStrip).setCorrection(0xFFFFFF);
+  FastLED.addLeds(pcontroller, rgbarray, numPins * ledsPerStrip).setCorrection(COLOR_CORRECTION);
   FastLED.delay(10000 / FRAMES_PER_SECOND);
   Serial.println("init test");
   FastLED.setBrightness(20);
