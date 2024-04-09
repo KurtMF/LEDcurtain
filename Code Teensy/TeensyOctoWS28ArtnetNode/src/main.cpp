@@ -15,13 +15,20 @@
 #include <OctoWS2811.h>
 #include <FastLED.h>
 
+// Turn on / off Serial logs for debugging
+#define DEBUG 0
+
 // Set to 1 to enable Artnet
 // Set to 0 to disable Artnet and run a test pattern
 #define artnet_set 1
 
 // To help with logevity of LEDs and Octo Board
-// Brightness is set to ~50%
-#define BRIGHTNESS 55
+// Brightness is set to ~50% (0-255)
+
+
+// 50 = 30A in full white
+
+#define BRIGHTNESS 50
 
  /*
   COLOR_CORRECTION
@@ -46,8 +53,6 @@ uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b)
 // ie. 510 leds / 3 universes per pin
 #define FRAMES_PER_SECOND 30
 
-// Turn on / off Serial logs for debugging
-#define DEBUG 0
 
 // CHANGE FOR YOUR SETUP most software this is 1, some software send out artnet first universe as 0.
 const int startUniverse = 0;
@@ -253,6 +258,7 @@ void setup()
   FastLED.addLeds(pcontroller, rgbarray, numPins * ledsPerStrip).setCorrection(COLOR_CORRECTION);
   FastLED.delay(10000 / FRAMES_PER_SECOND);
   Serial.println("init test");
+  Serial.println("________________INIT TEST_________________");
   FastLED.setBrightness(20);
   initTest();
   Serial.println("________________END INIT TEST_________________");
@@ -261,6 +267,13 @@ void setup()
   // this will be called for each packet received
   artnet.setArtDmxCallback(onDmxFrame);
   Serial.println("artnet.setArtDmxCallback");
+}
+
+void set_rgb(int r, int g, int b)
+{
+  for (int i = 0; i < numLeds; i++)
+    rgbarray[i] = CRGB(r, g, b);
+  FastLED.show();
 }
 
 void loop()
