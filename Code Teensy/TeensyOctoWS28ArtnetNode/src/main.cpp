@@ -212,7 +212,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
     int led = i + (universe - startUniverse) * (previousDataLength / 3);
     if (led < numLeds)
     {
-      rgbarray[led] = CRGB(gamma8[data[i * 3]], gamma8[data[i * 3 + 1]], gamma8[data[i * 3 + 2]]);
+      rgbarray[led] = CRGB(r_gamma8[data[i * 3]], g_gamma8[data[i * 3 + 1]], b_gamma8[data[i * 3 + 2]]);
     }
   }
 
