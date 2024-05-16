@@ -25,34 +25,32 @@
 // To help with logevity of LEDs and Octo Board
 // Brightness is set to ~50% (0-255)
 
-
 // 50 = 30A in full white
 
 #define BRIGHTNESS 50
 
- /*
-  COLOR_CORRECTION
-    TypicalLEDStrip=    0xFFB0F0     255, 176, 240 
-    Typical8mmPixel=    0xFFE08C     255, 224, 140 
-    TypicalPixelString= 0xFFE08C     255, 224, 140 
-    UncorrectedColor=   0xFFFFFF     255, 255, 255 
-  */
+/*
+ COLOR_CORRECTION
+   TypicalLEDStrip=    0xFFB0F0     255, 176, 240
+   Typical8mmPixel=    0xFFE08C     255, 224, 140
+   TypicalPixelString= 0xFFE08C     255, 224, 140
+   UncorrectedColor=   0xFFFFFF     255, 255, 255
+ */
 
 #define COLOR_CORRECTION TypicalLEDStrip
 
 uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b)
 {
-      uint8_t w = min(r, min(g, b));
-      r -= w;
-      g -= w;
-      b -= w;
-      return w;
+  uint8_t w = min(r, min(g, b));
+  r -= w;
+  g -= w;
+  b -= w;
+  return w;
 }
 
 // Throttling refresh for when using 24+ universes
 // ie. 510 leds / 3 universes per pin
 #define FRAMES_PER_SECOND 30
-
 
 // CHANGE FOR YOUR SETUP most software this is 1, some software send out artnet first universe as 0.
 const int startUniverse = 0;
@@ -75,13 +73,8 @@ const int numPins = 18; // Number of pins used for LED output = 32
 // These are the Octo default pins, can be changed as needed
 // IN V0.01a on PCB LED 28 are connected to GND
 byte pinList[numPins] = {
-    30, 29, 28, 27, 26, 25, 24,
-    12, 11, 10, 9, 8, 7, 6, 5,
-    31, 32, 33
-    // 5,  6,  7,  8,  9,  10, 11, 12,
-    // 24, 25, 26, 27, 28, 29, 30, 31,
-    //  32, 33, 34, 35, 36, 37, 38, 39,
-    //  40, 41, 13, 14, 15, 16, 17, 18
+    30, 29, 28, 27, 26, 25, 24, 12, 11, // on the left side of the board
+    31, 32, 33, 34, 35, 36, 37, 38, 39  // on the right side of the board
 };
 // Equivelent to 2 DMX universes
 const int Led_for_one_strip = 108;
@@ -132,7 +125,7 @@ public:
       uint8_t r = pixels.loadAndScale0();
       uint8_t g = pixels.loadAndScale1();
       uint8_t b = pixels.loadAndScale2();
-      pocto->setPixel(i++, r, g, b, white_from_rgb(r,g,b));
+      pocto->setPixel(i++, r, g, b, white_from_rgb(r, g, b));
 
       pixels.stepDithering();
       pixels.advanceData();
