@@ -165,13 +165,13 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
 
   for (int i = 0; i < maxUniverses; i++)
   {
-    if (DEBUG)
-    {
-      Serial.print("universesReceived[i] \t");
-      Serial.println(i);
-      Serial.print("\t");
-      Serial.println(universesReceived[i]);
-    }
+    // if (DEBUG)
+    // {
+    //   Serial.print("universesReceived[i] \t");
+    //   Serial.println(i);
+    //   Serial.print("\t");
+    //   Serial.println(universesReceived[i]);
+    // }
 
     if (universesReceived[i] == 0)
     {
@@ -219,8 +219,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
     // Reset universeReceived to 0
     memset(universesReceived, 0, maxUniverses);
   }
-  else if (DEBUG)
-    Serial.println("\t NOT DRAW LEDs");
+  // else if (DEBUG) Serial.println("\t NOT DRAW LEDs ");
 }
 
 void setup()

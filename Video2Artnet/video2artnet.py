@@ -4,7 +4,7 @@ import cv2 as cv
 from time import sleep
 
 # MATRIX
-target_size = (36, 138)
+target_size = (36, 108)
 target_ratio = target_size[0] / target_size[1]
 screen_offset = (0, 0)
 
@@ -92,6 +92,7 @@ while True:
 
         # send artnet
         for i in range(len(artnet)):
+            a.set_universe(i)
             a.set(artnet[i])
             a.show()
 
