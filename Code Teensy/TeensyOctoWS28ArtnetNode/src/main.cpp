@@ -16,7 +16,7 @@
 #include <FastLED.h>
 
 // Turn on / off Serial logs for debugging
-#define DEBUG 0
+#define DEBUG 1
 
 // Set to 1 to enable Artnet
 // Set to 0 to disable Artnet and run a test pattern
@@ -213,12 +213,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
 
   if (sendFrame)
   {
-    if (DEBUG)
-    {
-      Serial.println("\t DRAW LEDs");
-      Serial.println("\t DRAW LEDs");
-    }
-
+    if (DEBUG) Serial.println("\t DRAW LEDs");
     FastLED.show();
 
     // Reset universeReceived to 0
@@ -230,12 +225,12 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
 
 void setup()
 {
+  delay(1000);
   Serial.begin(115200);
 
-  Serial.println("Studio Jordan Shaw");
+  Serial.println("KXKM Etendard");
   Serial.println("Teensy OctoWS28 Artnet Node");
   Serial.println("=================");
-  Serial.println("Version: V0.2.1");
   if (artnet_set == 1)
   {
     artnet.begin(mac, ip);

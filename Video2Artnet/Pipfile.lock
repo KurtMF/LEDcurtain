@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f073071945290ea9fe954d6c43c529e4f37906f9ff2b403d8e936a19280763eb"
+            "sha256": "da5724d62db6d7f2542d93efe72db6fa19d6505f20556ba471d235db44b1b14d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -71,6 +71,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.6'",
             "version": "==4.9.0.80"
+        },
+        "stupidartnet": {
+            "hashes": [
+                "sha256:531616893a88f6db7084049b9a5d9af1f4b3a2da75b64b2b0cf2d681943e28cd",
+                "sha256:7262530620c553c13a8a186b2a26d54f36af6073421ba2d88a11cd18c3828217"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.6'",
+            "version": "==1.5.0"
         }
     },
     "develop": {}

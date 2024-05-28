@@ -1,21 +1,15 @@
+from stupidArtnet import StupidArtnet
 import numpy as np
 import cv2 as cv
 from time import sleep
-
-# VIDEO
-cap = cv.VideoCapture('small.mp4')
-fps = cap.get(cv.CAP_PROP_FPS)
-frame_interval = 1/fps
-last_frame_time = 0
-
-print(f"FPS: {fps}")
-print(f"Frame interval: {frame_interval} seconds")
 
 # MATRIX
 target_size = (36, 138)
 target_ratio = target_size[0] / target_size[1]
 screen_offset = (0, 0)
 
+# ARTNET
+a = StupidArtnet("192.168.1.12")
 
 
 def waitVid():
@@ -36,7 +30,7 @@ def waitVid():
     # Late ?
     late_by = (cv.getTickCount() - nextDueTime) / cv.getTickFrequency()
     if late_by > 0.001 and last_frame_time > 0:
-        print(f"WARNING: Late by {late_by*1000} ms")
+        print(f"WARNING: Late by { int(late_by*1000) } ms")
 
 
 def resizeFrame(frame):
@@ -57,41 +51,62 @@ def resizeFrame(frame):
     return cv.resize(frame, target_size, interpolation=cv.INTER_AREA)
 
 
-# READ VID
-while cap.isOpened():
-    ret, frame = cap.read()
+while True:
 
-    # if frame is read correctly ret is True
-    if not ret:
-        print("Can't receive frame (stream end?). Exiting ...")
-        break
+    # MEDIA
+    media = 'small.mp4'
 
-    # Crop and resize frame
-    matrix = resizeFrame(frame)
+    # OPEN VIDEO
+    cap = cv.VideoCapture(media)
+    fps = cap.get(cv.CAP_PROP_FPS)
+    frame_interval = 1/fps
+    last_frame_time = 0
 
-    # flip vertically even columns (ZigZag pattern)
-    for i in range(1, matrix.shape[1], 2):
-        matrix[:, i] = np.flip(matrix[:, i], axis=0)
+    print(f"PLAY {media} - FPS: {fps}")
+    # print(f"Frame interval: { int(frame_interval*1000) } ms")
 
-    # reshape
-    artnet = np.reshape(matrix, (1, target_size[0]*target_size[1]*3))[0]
+    # READ VIDEO
+    while cap.isOpened():
+        ret, frame = cap.read()
 
-    # split artnet into 512 byte universe
-    artnet = [artnet[i:i+512] for i in range(0, len(artnet), 512)]
+        # if frame is read correctly ret is True
+        if not ret:
+            print("END OF VIDEO.")
+            break
 
-    # fill up the last universe with zeros
-    artnet[-1] = np.pad(artnet[-1], (0, 512 - len(artnet[-1])))
+        # Crop and resize frame
+        matrix = resizeFrame(frame)
+
+        # flip vertically even columns (ZigZag pattern)
+        for i in range(1, matrix.shape[1], 2):
+            matrix[:, i] = np.flip(matrix[:, i], axis=0)
+
+        # reshape (flatten) matrix to 1D array 
+        artnet = np.reshape(matrix, (1, target_size[0]*target_size[1]*3))[0]
+
+        # split artnet into 512 byte universe
+        artnet = [artnet[i:i+512] for i in range(0, len(artnet), 512)]
+
+        # fill up the last universe with zeros
+        artnet[-1] = np.pad(artnet[-1], (0, 512 - len(artnet[-1])))
+
+        # send artnet
+        for i in range(len(artnet)):
+            a.set(artnet[i])
+            a.show()
+
+        # wait for next frame
+        waitVid()
+
+        # PUSH frame to artnet
+        cv.imshow('frame', matrix)
+
+        last_frame_time = cv.getTickCount()
+
+        if cv.waitKey(1) == ord('q'):
+            break
+    
+    cap.release()
 
 
-    waitVid()
-
-    # PUSH frame to artnet
-    cv.imshow('frame', matrix)
-
-    last_frame_time = cv.getTickCount()
-
-    if cv.waitKey(1) == ord('q'):
-        break
- 
-cap.release()
 cv.destroyAllWindows()
