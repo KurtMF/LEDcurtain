@@ -11,6 +11,14 @@ screen_offset = (0, 0)
 # ARTNET
 a = StupidArtnet("192.168.1.12")
 
+# Make a red image matrix
+redImg = np.zeros((target_size[1], target_size[0], 3), np.uint8)
+redImg[:, :] = (0, 0, 255)
+
+# Make a green image matrix
+greenImg = np.zeros((target_size[1], target_size[0], 3), np.uint8)
+greenImg[:, :] = (0, 255, 0)
+
 
 def waitVid():
     nextDueTime = last_frame_time + frame_interval * cv.getTickFrequency()
@@ -54,7 +62,10 @@ def resizeFrame(frame):
 while True:
 
     # MEDIA
-    media = 'small.mp4'
+    media = 'pierre.mp4'
+    # media = 'small.mp4'
+    # media = 'DeadPixelTest.mp4'
+    # media = 'love_test.mov'
 
     # OPEN VIDEO
     cap = cv.VideoCapture(media)
@@ -75,23 +86,43 @@ while True:
             break
 
         # Crop and resize frame
-        matrix = resizeFrame(frame)
+        matrixO = resizeFrame(frame)
+
+        # if (counter // 60) % 2  == 0:
+        #     matrixO = redImg
+        # else:
+        #     matrixO = greenImg
+
+        # reverse Red and Blue before flatten (3rd dimension)
+        matrix = cv.cvtColor(matrixO, cv.COLOR_BGR2RGB)
 
         # flip vertically even columns (ZigZag pattern)
         for i in range(1, matrix.shape[1], 2):
             matrix[:, i] = np.flip(matrix[:, i], axis=0)
 
+        
+        # rotate 90°
+        matrix = np.rot90(matrix)
+
+        # flip vertically
+        matrix = np.flip(matrix, axis=0)
+
         # reshape (flatten) matrix to 1D array 
-        artnet = np.reshape(matrix, (1, target_size[0]*target_size[1]*3))[0]
+        artnet = np.reshape(matrix, (1,-1))[0]
 
-        # split artnet into 512 byte universe
-        artnet = [artnet[i:i+512] for i in range(0, len(artnet), 512)]
+        # reset all values to 0
+        # artnet = np.zeros(artnet.shape, dtype=np.uint8)
 
-        # fill up the last universe with zeros
-        artnet[-1] = np.pad(artnet[-1], (0, 512 - len(artnet[-1])))
+        # split artnet into 510 byte universe (!! 512 crop last pixel !!)
+        artnet = [artnet[i:i+510] for i in range(0, len(artnet), 510)]
+
+        # fill up each universe with 0
+        for i in range(len(artnet)):
+            artnet[i] = np.pad(artnet[i], (0, 512 - len(artnet[i])))
 
         # send artnet
         for i in range(len(artnet)):
+            # print(artnet[i])
             a.set_universe(i)
             a.set(artnet[i])
             a.show()
@@ -100,7 +131,7 @@ while True:
         waitVid()
 
         # PUSH frame to artnet
-        cv.imshow('frame', matrix)
+        cv.imshow('frame', matrixO)
 
         last_frame_time = cv.getTickCount()
 

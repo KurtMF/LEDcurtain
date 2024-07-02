@@ -15,6 +15,8 @@
 #include <OctoWS2811.h>
 #include <FastLED.h>
 
+#include "gamma8.h"
+
 // Turn on / off Serial logs for debugging
 #define DEBUG 1
 
@@ -27,7 +29,7 @@
 
 // 50 = 30A in full white
 
-#define BRIGHTNESS 50
+#define BRIGHTNESS 255
 
 /*
  COLOR_CORRECTION
@@ -37,14 +39,25 @@
    UncorrectedColor=   0xFFFFFF     255, 255, 255
  */
 
-#define COLOR_CORRECTION TypicalLEDStrip
+int flip = 0;
+bool onoff() {
+  return (flip / 15) % 2 == 0;
+}
+
+// #define COLOR_CORRECTION TypicalLEDStrip
+#define COLOR_CORRECTION UncorrectedColor
 
 uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b)
 {
+  r = rg8(r);
+  g = gg8(g);
+  b = bg8(b);
+
   uint8_t w = min(r, min(g, b));
   r -= w;
   g -= w;
   b -= w;
+
   return w;
 }
 
@@ -106,8 +119,7 @@ int drawingMemory[ledsPerStrip * numPins * 4 / 4];
 // Initialize Octo library using FastLED Controller
 OctoWS2811 octo(ledsPerStrip, displayMemory, drawingMemory, WS2811_GRBW | WS2811_800kHz, numPins, pinList);
 
-template <EOrder RGB_ORDER = RGB,
-          uint8_t CHIP = WS2811_800kHz>
+template <EOrder RGB_ORDER = RGB, uint8_t CHIP = WS2811_800kHz>
 class CTeensy4Controller : public CPixelLEDController<RGB_ORDER, 8, 0xFF>
 {
   OctoWS2811 *pocto;
@@ -125,7 +137,8 @@ public:
       uint8_t r = pixels.loadAndScale0();
       uint8_t g = pixels.loadAndScale1();
       uint8_t b = pixels.loadAndScale2();
-      pocto->setPixel(i++, r, g, b, white_from_rgb(r, g, b));
+      uint8_t w = white_from_rgb(r, g, b);
+      pocto->setPixel(i++, r, g, b, w);
 
       pixels.stepDithering();
       pixels.advanceData();
@@ -187,14 +200,13 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
     Serial.print(artnet.getUniverse());
     Serial.print("\tdata length = ");
     Serial.print(artnet.getLength());
-    Serial.print("\tsequence n0. = ");
-    Serial.println(artnet.getSequence());
-    Serial.print("DMX data: ");
+    Serial.print("\tDMX data[0]: ");
     // print out MORE data:
-    Serial.print("ledsPerStrip = ");
-    Serial.print(ledsPerStrip);
-    Serial.print("\tmaxUniverses = ");
-    Serial.print(maxUniverses);
+    // Serial.print("ledsPerStrip = ");
+    // Serial.print(ledsPerStrip);
+    // Serial.print("\tmaxUniverses = ");
+    // Serial.print(maxUniverses);
+    Serial.print(data[0]);
     Serial.print("\tsendFrame = ");
     Serial.println(sendFrame);
   }
@@ -205,7 +217,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
     int led = i + (universe - startUniverse) * (previousDataLength / 3);
     if (led < numLeds)
     {
-      rgbarray[led] = CRGB(r_gamma8[data[i * 3]], g_gamma8[data[i * 3 + 1]], b_gamma8[data[i * 3 + 2]]);
+      rgbarray[led] = CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
     }
   }
 
@@ -215,6 +227,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
   {
     if (DEBUG) Serial.println("\t DRAW LEDs");
     FastLED.show();
+    flip += 1;
 
     // Reset universeReceived to 0
     memset(universesReceived, 0, maxUniverses);
@@ -230,13 +243,7 @@ void setup()
   Serial.println("KXKM Etendard");
   Serial.println("Teensy OctoWS28 Artnet Node");
   Serial.println("=================");
-  if (artnet_set == 1)
-  {
-    artnet.begin(mac, ip);
-    Serial.println("artnet.begin");
-  }
-  else
-    Serial.println("Artnet not set");
+  
   octo.begin();
   Serial.println("octo.begin");
   pcontroller = new CTeensy4Controller<RGB, WS2811_800kHz>(&octo);
@@ -250,6 +257,13 @@ void setup()
   initTest();
   Serial.println("________________END INIT TEST_________________");
   FastLED.setBrightness(BRIGHTNESS);
+
+  if (artnet_set == 1)
+  {
+    artnet.begin(mac, ip);
+    Serial.println("artnet.begin");
+  }
+  else Serial.println("Artnet not set");
 
   // this will be called for each packet received
   artnet.setArtDmxCallback(onDmxFrame);
