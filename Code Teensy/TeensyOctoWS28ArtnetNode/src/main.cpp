@@ -24,6 +24,10 @@
 // Set to 0 to disable Artnet and run a test pattern
 #define artnet_set 1
 
+// Set to 0 = Etendard V0.1 (GRAZ)
+// Set to 1 = Etendard V1.a (KXKM)
+#define V_ETENDARD 1
+
 // To help with logevity of LEDs and Octo Board
 // Brightness is set to ~50% (0-255)
 
@@ -79,19 +83,29 @@ byte mac[] = {0x3c, 0x22, 0xfb, 0x87, 0x16, 0x1b};
 // For every device, the IP will be different. Make sure to update when changing devices or enviroments
 byte ip[] = {192, 168, 1, 12};
 
-// OctoWS2811 settings
+// Etendard V0.1 (GRAZ)
+#if V_ETENDARD == 0 
 const int numPins = 18; // Number of pins used for LED output = 32
-//
+const byte pinList[numPins] = {
+    30, 29, 28, 27, 26, 25, 24, 12, 11, 
+    31, 32, 33, 34, 35, 36, 37, 38, 39  
+}; // List of pins used for LED output
+const int Led_for_one_strip = 108; // Number of LEDs per strip
+const int Nb_string_strip = 2;    // Number of strips per pin
+#endif
 
-// These are the Octo default pins, can be changed as needed
-// IN V0.01a on PCB LED 28 are connected to GND
-byte pinList[numPins] = {
-    30, 29, 28, 27, 26, 25, 24, 12, 11, // on the left side of the board
-    31, 32, 33, 34, 35, 36, 37, 38, 39  // on the right side of the board
-};
-// Equivelent to 2 DMX universes
-const int Led_for_one_strip = 108;
-const int Nb_string_strip = 2;
+// Etendard V1.a (KXKM)
+#if V_ETENDARD == 1 
+const int numPins = 18; // Number of pins used for LED output = 32
+const byte pinList[numPins] = {
+    33, 32, 
+    31, 30, 29, 28, 27, 26, 25, 24, 
+    12, 11, 10,  9,  8,  7,  6,  5  
+}; // List of pins used for LED output
+const int Led_for_one_strip = 138; // Number of LEDs per strip
+const int Nb_string_strip = 2;    // Number of strips per pin
+#endif
+
 const int ledsPerStrip = Led_for_one_strip * Nb_string_strip;
 // Octo will always have 8 strips
 // Just recasting num of pins as strips for clarity below
