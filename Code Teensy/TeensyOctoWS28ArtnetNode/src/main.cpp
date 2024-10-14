@@ -10,7 +10,7 @@
 #include <Artnet.h>
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
-
+#include <EEPROM.h>
 #include <SPI.h>
 #include <OctoWS2811.h>
 #include <FastLED.h>
@@ -77,7 +77,7 @@ const int startUniverse = 0;
 // On mac using a ethernet dongle, the IP is configured in the OSX network settings.
 // You wanna set the IP you set for the dongle as the IP here.
 // For every device, the IP will be different. Make sure to update when changing devices or enviroments
-byte ip[] = {10, 0, 12, 1};
+byte ip[] = {10, 0, 12, EEPROM.read(10)}; // IP address of the node
 
 // Etendard V0.1 (GRAZ)
 #if V_ETENDARD == 0
@@ -85,8 +85,8 @@ const int numPins = 18; // Number of pins used for LED output = 32
 const byte pinList[numPins] = {
     30, 29, 28, 27, 26, 25, 24, 12, 11,
     31, 32, 33, 34, 35, 36, 37, 38, 39}; // List of pins used for LED output
-const int Led_for_one_strip = 108; // Number of LEDs per strip
-const int Nb_string_strip = 2;     // Number of strips per pin
+const int Led_for_one_strip = 108;       // Number of LEDs per strip
+const int Nb_string_strip = 2;           // Number of strips per pin
 #endif
 
 // Etendard V1.a (KXKM)
@@ -95,7 +95,7 @@ const int numPins = 18; // Number of pins used for LED output = 32
 const byte pinList[numPins] = {
     33, 32,
     31, 30, 29, 28, 27, 26, 25, 24,
-    12, 11, 10, 9, 8, 7, 6, 5}; // List of pins used for LED output
+    12, 11, 10, 9, 8, 7, 6, 5};    // List of pins used for LED output
 const int Led_for_one_strip = 138; // Number of LEDs per strip
 const int Nb_string_strip = 2;     // Number of strips per pin
 #endif
@@ -170,74 +170,6 @@ int previousDataLength = 0;
 CTeensy4Controller<RGB, WS2811_800kHz> *pcontroller;
 
 #include "function.h"
-void teensyMAC(uint8_t *mac) // recover mac address from teensy
-{
-
-  static char teensyMac[23];
-
-#if defined(HW_OCOTP_MAC1) && defined(HW_OCOTP_MAC0)
-  Serial.println("using HW_OCOTP_MAC* - see https://forum.pjrc.com/threads/57595-Serial-amp-MAC-Address-Teensy-4-0");
-  for (uint8_t by = 0; by < 2; by++)
-    mac[by] = (HW_OCOTP_MAC1 >> ((1 - by) * 8)) & 0xFF;
-  for (uint8_t by = 0; by < 4; by++)
-    mac[by + 2] = (HW_OCOTP_MAC0 >> ((3 - by) * 8)) & 0xFF;
-
-#define MAC_OK
-
-#else
-
-  mac[0] = 0x04;
-  mac[1] = 0xE9;
-  mac[2] = 0xE5;
-
-  uint32_t SN = 0;
-  __disable_irq();
-
-#if defined(HAS_KINETIS_FLASH_FTFA) || defined(HAS_KINETIS_FLASH_FTFL)
-  Serial.println("using FTFL_FSTAT_FTFA - vis teensyID.h - see https://github.com/sstaub/TeensyID/blob/master/TeensyID.h");
-
-  FTFL_FSTAT = FTFL_FSTAT_RDCOLERR | FTFL_FSTAT_ACCERR | FTFL_FSTAT_FPVIOL;
-  FTFL_FCCOB0 = 0x41;
-  FTFL_FCCOB1 = 15;
-  FTFL_FSTAT = FTFL_FSTAT_CCIF;
-  while (!(FTFL_FSTAT & FTFL_FSTAT_CCIF))
-    ; // wait
-  SN = *(uint32_t *)&FTFL_FCCOB7;
-
-#define MAC_OK
-
-#elif defined(HAS_KINETIS_FLASH_FTFE)
-  Serial.println("using FTFL_FSTAT_FTFE - vis teensyID.h - see https://github.com/sstaub/TeensyID/blob/master/TeensyID.h");
-
-  kinetis_hsrun_disable();
-  FTFL_FSTAT = FTFL_FSTAT_RDCOLERR | FTFL_FSTAT_ACCERR | FTFL_FSTAT_FPVIOL;
-  *(uint32_t *)&FTFL_FCCOB3 = 0x41070000;
-  FTFL_FSTAT = FTFL_FSTAT_CCIF;
-  while (!(FTFL_FSTAT & FTFL_FSTAT_CCIF))
-    ; // wait
-  SN = *(uint32_t *)&FTFL_FCCOBB;
-  kinetis_hsrun_enable();
-
-#define MAC_OK
-
-#endif
-
-  __enable_irq();
-
-  for (uint8_t by = 0; by < 3; by++)
-    mac[by + 3] = (SN >> ((2 - by) * 8)) & 0xFF;
-
-#endif
-
-#ifdef MAC_OK
-  sprintf(teensyMac, "MAC: %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  Serial.println(teensyMac);
-  // byte mac[] = {0x3c, 0x22, 0xfb, 0x87, 0x16, 0x1b};
-
-#else
-  Serial.println("ERROR: could not get MAC");
-#endif
-}
 
 void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *data)
 {
@@ -314,6 +246,14 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
 
 void setup()
 {
+  if (EEPROM.read(10) == 0 || EEPROM.read(10) >= 255)
+  {
+    Serial.println("EEPROM.read(10) == 0");
+    EEPROM.write(10, 1);
+  }
+  Serial.printf("EEPROM.read(10) = %d \n", EEPROM.read(10));
+  ip[4] = {EEPROM.read(10)}; // IP address of the node
+
   delay(1000);
   Serial.begin(115200);
 
