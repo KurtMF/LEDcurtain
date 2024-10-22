@@ -77,7 +77,8 @@ const int startUniverse = 0;
 // On mac using a ethernet dongle, the IP is configured in the OSX network settings.
 // You wanna set the IP you set for the dongle as the IP here.
 // For every device, the IP will be different. Make sure to update when changing devices or enviroments
-byte ip[] = {10, 0, 12, EEPROM.read(10)}; // IP address of the node
+
+byte ip[] = {10, 0, 10, EEPROM.read(10)+100}; // IP address of the node
 
 // Etendard V0.1 (GRAZ)
 #if V_ETENDARD == 0
@@ -246,15 +247,16 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
 
 void setup()
 {
+  
   if (EEPROM.read(10) == 0 || EEPROM.read(10) >= 255)
   {
-    Serial.println("EEPROM.read(10) == 0");
-    EEPROM.write(10, 1);
+    Serial.println("EEPROM not set !");
+    EEPROM.write(10, 3); // IP address of the node increment by 1
   }
-  Serial.printf("EEPROM.read(10) = %d \n", EEPROM.read(10));
-  ip[4] = {EEPROM.read(10)}; // IP address of the node
-
   delay(1000);
+  Serial.printf("EEPROM.read(10) = %d \n", EEPROM.read(10));
+  ip[4] = {EEPROM.read(10)+100}; // IP address of the node
+
   Serial.begin(115200);
 
   Serial.println("KXKM Etendard");
@@ -277,9 +279,14 @@ void setup()
 
   if (artnet_set == 1)
   {
-    uint8_t mac[6];
-    teensyMAC(mac);
+       uint8_t mac[6];
+        teensyMAC(mac);
+        Ethernet.setSubnetMask({255, 255, 0, 0});
+  Serial.printf("IP = %d.%d.%d.%0d\n", ip[0], ip[1], ip[2], ip[3]);
+
     artnet.begin(mac, ip);
+    
+    // TODO : set subnet and gateway a tester
     Serial.println("artnet.begin");
   }
   else

@@ -99,7 +99,6 @@ void teensyMAC(uint8_t *mac) // recover mac address from teensy
 #ifdef MAC_OK
   sprintf(teensyMac, "MAC: %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   Serial.println(teensyMac);
-  Serial.printf("IP = %d.%d.%d.%0d\n", ip[0], ip[1], ip[2], ip[3]);
 #else
   Serial.println("ERROR: could not get MAC");
 #endif
