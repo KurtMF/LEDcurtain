@@ -24,16 +24,19 @@
 // Set to 0 to disable Artnet and run a test pattern
 #define artnet_set 1
 
-// Set to 0 = Etendard V0.1 (GRAZ)
-// Set to 1 = Etendard V1.a (KXKM)
-// #define V_ETENDARD 1
+// Set to 0 = Etendard V0.1 (GRAZ) Proto
+// Set to 1 = Etendard V1.a (KXKM) Migration
+// #define V_ETENDARD 1 // set in platformio.ini
+
+// Force ID write: comment after initial set !
+#define ID_ETENDARD 2
 
 // To help with logevity of LEDs and Octo Board
 // Brightness is set to ~50% (0-255)
 
-// 50 = 30A in full white
+// 50% = 30A in full white
 
-#define BRIGHTNESS 255
+#define BRIGHTNESS 200
 
 /*
  COLOR_CORRECTION
@@ -78,7 +81,7 @@ const int startUniverse = 0;
 // You wanna set the IP you set for the dongle as the IP here.
 // For every device, the IP will be different. Make sure to update when changing devices or enviroments
 
-byte ip[] = {10, 0, 10, EEPROM.read(10)+100}; // IP address of the node
+byte ip[] = {2, 12, 0, 254}; // IP address of the node (254 is default, will be overwriten by ID_ETENDARD read from EEPROM)
 
 // Etendard V0.1 (GRAZ)
 #if V_ETENDARD == 0
@@ -172,7 +175,9 @@ CTeensy4Controller<RGB, WS2811_800kHz> *pcontroller;
 
 #include "function.h"
 
-void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *data)
+// Store input artnet data, triggers display once all universes are received
+//
+void onDmxFrame_full(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *data)
 {
   sendFrame = 1;
 
@@ -234,28 +239,78 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
 
   if (sendFrame)
   {
-    if (DEBUG)
-      Serial.println("\t DRAW LEDs");
+    if (DEBUG) Serial.println("\t DRAW LEDs");
     FastLED.show();
     flip += 1;
 
     // Reset universeReceived to 0
     memset(universesReceived, 0, maxUniverses);
+    previousDataLength = 0;
   }
   // else if (DEBUG) Serial.println("\t NOT DRAW LEDs ");
 }
 
+// Triggers data display on first universe received, then stores data 
+//
+// void onDmxFrame_first(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *data) 
+// {
+//   if (DEBUG)
+//   {
+//     // print out our data
+//     Serial.print("universe number = ");
+//     Serial.print(artnet.getUniverse());
+//     Serial.print("\tdata length = ");
+//     Serial.print(artnet.getLength());
+//     Serial.print("\tDMX data[0]: ");
+//     Serial.print(data[0]);
+//     Serial.print("\tsequence = ");
+//     Serial.println(sequence);
+//   }
+
+//   // first universe received, trigger display (previous stored data)
+//   if (universe == startUniverse)
+//   {
+//     if (DEBUG) Serial.println("\t DRAW LEDs");
+//     FastLED.show();
+//     flip += 1;
+//     memset(rgbarray, 0, numLeds * sizeof(CRGB));  // reset buffer (in case of missing data) -> comment to hold
+//     previousDataLength = 0;
+//   }
+
+//   // Read universe and put into the right part of the display buffer
+//   for (int i = 0; i < length / 3; i++)
+//   {
+//     int led = i + (universe - startUniverse) * (previousDataLength / 3);
+//     if (led < numLeds)
+//     {
+//       rgbarray[led] = CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
+//     }
+//   }
+
+//   previousDataLength = length;
+  
+// }
+
 void setup()
 {
   
+  // Rewrite nodeID
+  #ifdef ID_ETENDARD
+  if (EEPROM.read(10) != ID_ETENDARD) {
+    EEPROM.write(10, ID_ETENDARD);
+    delay(200);
+  }
+  #endif
+
+
   if (EEPROM.read(10) == 0 || EEPROM.read(10) >= 255)
   {
-    Serial.println("EEPROM not set !");
-    EEPROM.write(10, 3); // IP address of the node increment by 1
+    Serial.println("EEPROM not set.. using defaut id: 254");
+    EEPROM.write(10, 254); 
   }
-  delay(1000);
+  delay(500);
   Serial.printf("EEPROM.read(10) = %d \n", EEPROM.read(10));
-  ip[4] = {EEPROM.read(10)+100}; // IP address of the node
+  ip[3] = {EEPROM.read(10)}; // IP address of the node
 
   Serial.begin(115200);
 
@@ -279,21 +334,20 @@ void setup()
 
   if (artnet_set == 1)
   {
-       uint8_t mac[6];
-        teensyMAC(mac);
-        Ethernet.setSubnetMask({255, 255, 0, 0});
-  Serial.printf("IP = %d.%d.%d.%0d\n", ip[0], ip[1], ip[2], ip[3]);
-
+    uint8_t mac[6];
+    teensyMAC(mac);
+    Ethernet.setSubnetMask({255, 255, 0, 0});
+    Serial.printf("IP = %d.%d.%d.%0d\n", ip[0], ip[1], ip[2], ip[3]);
     artnet.begin(mac, ip);
-    
-    // TODO : set subnet and gateway a tester
     Serial.println("artnet.begin");
   }
   else
     Serial.println("Artnet not set");
 
   // this will be called for each packet received
-  artnet.setArtDmxCallback(onDmxFrame);
+  
+  artnet.setArtDmxCallback(onDmxFrame_full);
+
   Serial.println("artnet.setArtDmxCallback");
 }
 
