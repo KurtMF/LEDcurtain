@@ -24,12 +24,6 @@
 // Set to 0 to disable Artnet and run a test pattern
 #define artnet_set 1
 
-// Set to 0 = Etendard V0.1 (GRAZ) Proto
-// Set to 1 = Etendard V1.a (KXKM) Migration
-// #define V_ETENDARD 1 // set in platformio.ini
-
-// Force ID write: comment after initial set !
-#define ID_ETENDARD 2
 
 // To help with logevity of LEDs and Octo Board
 // Brightness is set to ~50% (0-255)
@@ -99,9 +93,23 @@ const int numPins = 18; // Number of pins used for LED output = 32
 const byte pinList[numPins] = {
     33, 32,
     31, 30, 29, 28, 27, 26, 25, 24,
-    12, 11, 10, 9, 8, 7, 6, 5};    // List of pins used for LED output
+    12, 11, 10,  9,  8,  7,  6,  5};    // List of pins used for LED output
 const int Led_for_one_strip = 138; // Number of LEDs per strip
 const int Nb_string_strip = 2;     // Number of strips per pin
+#endif
+
+// Etendard V2.a (KXKM) version with 1 strip of 138 LEDs per pin in 36 output pins
+#if V_ETENDARD == 2
+const int numPins = 36;
+const byte pinList[numPins] = {
+    23, 22, 21, 20,
+    18, 17, 16, 15, 14, 13, 41, 40,
+    39, 38, 37, 36, 35, 34, 33, 32, 
+    31, 30, 29, 28, 27, 26, 25, 24,
+    12, 11, 10,  9,  8,  7,  6,  5
+    };    // List of pins used for LED output
+const int Led_for_one_strip = 138; // Number of LEDs per strip
+const int Nb_string_strip = 1;     // Number of strips per pin
 #endif
 
 const int ledsPerStrip = Led_for_one_strip * Nb_string_strip;
