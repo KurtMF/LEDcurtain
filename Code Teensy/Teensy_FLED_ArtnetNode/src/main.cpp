@@ -1,19 +1,34 @@
-// Teensy OctoWS28 Artnet Node
-// Studio Jordan Shaw
-// =================
-// Version: V0.2.1
-//
-// An Artnet node built with Teensy 4.1 + OctoWS28
-// Further documentation in the READEME.md
-//
-#include <ObjectFLED.h> //must include this before FastLED.h
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * @file main.cpp
+ * @brief Point d'entrée principal du programme.
+ * @details Créé par Clément Saillant @electron-rare pour Komplex Kapharnum
+ * Ce programme permet de gérer un système d'écran à base de LED en artnet
+ *
+ * Pour plus d'informations, consultez le fichier README.md
+ * @version 1.0
+ * @date 2025-02-11
+ */
+
+#include <ObjectFLED.h> // must include this before FastLED.h
 // As if FastLED 3.9.12, this is no longer needed for Teensy 4.0/4.1.
 #define FASTLED_USES_OBJECTFLED
-
-// Optional define to override the latch delay (microseconds)
-#define FASTLED_OBJECTFLED_LATCH_DELAY 75
 #include "FastLED.h"
-// #include "fl/warn.h" //must include this before FastLED.h
+// #include "fl/warn.h" // must include this before FastLED.h
 
 #include <Artnet.h>
 #include <EEPROM.h>
@@ -27,18 +42,17 @@
 // Turn on / off Serial logs for debugging
 #define DEBUG 1
 // #define ID_ETENDARD 2
-//  Set to 1 to enable Artnet
-//  Set to 0 to disable Artnet and run a test pattern
+// Set to 1 to enable Artnet
+// Set to 0 to disable Artnet and run a test pattern
 #define artnet_set 1
 
-// set time to wait for economy mode
+// Set time to wait for economy mode
 #define ECONOMY_MODE 3000
 unsigned long previousMillis = 0;
-// To help with logevity of LEDs and Octo Board
+// To help with longevity of LEDs and Octo Board
 // Brightness is set to ~50% (0-255)
 
 // 50% = 30A in full white
-
 #define BRIGHTNESS 150
 
 /*
@@ -55,6 +69,14 @@ bool onoff() { return (flip / 15) % 2 == 0; }
 // #define COLOR_CORRECTION TypicalLEDStrip
 #define COLOR_CORRECTION UncorrectedColor
 
+/**
+ * @brief Convertit les valeurs RGB en valeur blanche.
+ * 
+ * @param r Référence à la composante rouge.
+ * @param g Référence à la composante verte.
+ * @param b Référence à la composante bleue.
+ * @return uint8_t Valeur de la composante blanche.
+ */
 uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b) {
   r = rg8(r);
   g = gg8(g);
@@ -69,7 +91,7 @@ uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b) {
 }
 
 // Throttling refresh for when using 24+ universes
-// ie. 510 leds / 3 universes per pin
+// i.e. 510 leds / 3 universes per pin
 #define FRAMES_PER_SECOND 30
 
 // CHANGE FOR YOUR SETUP most software this is 1, some software send out artnet
@@ -77,13 +99,13 @@ uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b) {
 const int startUniverse = 0;
 
 // Network IP addresses
-// On mac using a ethernet dongle, the IP is configured in the OSX network
+// On mac using an ethernet dongle, the IP is configured in the OSX network
 // settings. You wanna set the IP you set for the dongle as the IP here. For
 // every device, the IP will be different. Make sure to update when changing
-// devices or enviroments
+// devices or environments
 
 byte ip[] = {2, 12, 0, 254}; // IP address of the node (254 is default, will be
-                             // overwriten by ID_ETENDARD read from EEPROM)
+                             // overwritten by ID_ETENDARD read from EEPROM)
 
 // Etendard V0.1 (GRAZ)
 #if V_ETENDARD == 0
@@ -133,22 +155,35 @@ const int numberOfChannels = numLeds * 3;
 CRGB rgbarray[numPins * ledsPerStrip];
 ObjectFLED dispLeds(PIX_PER_STR *numStrips, rgbarray, CORDER_GRBW, numStrips,
                     pinList);
-// Memory buffer to artnet data
 
-/*
-// Initialize Octo library using FastLED Controller
-OctoWS2811 octo(ledsPerStrip, displayMemory, drawingMemory,
-                WS2811_GRBW | WS2811_800kHz, numPins, pinList);
-*/
-
+/**
+ * @brief Contrôleur pour Teensy 4 utilisant ObjectFLED.
+ * 
+ * @tparam RGB_ORDER Ordre des couleurs RGB.
+ * @tparam CHIP Type de puce LED.
+ */
 template <EOrder RGB_ORDER = RGB, uint8_t CHIP = WS2811_800kHz>
 class CTeensy4Controller : public CPixelLEDController<RGB_ORDER, 8, 0xFF> {
   ObjectFLED *pobjectFled;
 
 public:
+  /**
+   * @brief Constructeur du contrôleur.
+   * 
+   * @param _pobjectFled Pointeur vers l'objet ObjectFLED.
+   */
   CTeensy4Controller(ObjectFLED *_pobjectFled) : pobjectFled(_pobjectFled){};
 
+  /**
+   * @brief Initialisation du contrôleur.
+   */
   virtual void init() {}
+
+  /**
+   * @brief Affiche les pixels.
+   * 
+   * @param pixels Contrôleur de pixels.
+   */
   virtual void showPixels(PixelController<RGB_ORDER, 8, 0xFF> &pixels) {
 
     uint32_t i = 0;
@@ -181,8 +216,14 @@ int previousDataLength = 0;
 
 #include "function.h"
 
-// Store input artnet data, triggers display once all universes are received
-//
+/**
+ * @brief Callback pour traiter les trames DMX complètes.
+ * 
+ * @param universe Numéro de l'univers.
+ * @param length Longueur des données.
+ * @param sequence Séquence des données.
+ * @param data Pointeur vers les données.
+ */
 void onDmxFrame_full(uint16_t universe, uint16_t length, uint8_t sequence,
                      uint8_t *data) {
   sendFrame = 1;
@@ -190,7 +231,7 @@ void onDmxFrame_full(uint16_t universe, uint16_t length, uint8_t sequence,
   // Store which universe was received
   // =============
   // If your artnet server is not sending the same number of LED data
-  // configfured for this node ie: the configured number of LED pixels +
+  // configured for this node i.e.: the configured number of LED pixels +
   // universes, the LEDs will not turn on. LED + universe numbers set in this
   // app must match the data the artnet server is sending
   // =============
@@ -211,25 +252,6 @@ void onDmxFrame_full(uint16_t universe, uint16_t length, uint8_t sequence,
       break;
     }
   }
-
-  /*
-  if (DEBUG) {
-    // print out our data
-    Serial.print("universe number = ");
-    Serial.print(artnet.getUniverse());
-    Serial.print("\tdata length = ");
-    Serial.print(artnet.getLength());
-    Serial.print("\tDMX data[0]: ");
-    // print out MORE data:
-    Serial.print("ledsPerStrip = ");
-    Serial.print(ledsPerStrip);
-    Serial.print("\tmaxUniverses = ");
-    Serial.print(maxUniverses);
-    Serial.print(data[0]);
-    Serial.print("\tsendFrame = ");
-    Serial.println(sendFrame);
-  }
-  */
 
   // Read universe and put into the right part of the display buffer
   for (int i = 0; i < length / 3; i++) {
@@ -258,48 +280,9 @@ void onDmxFrame_full(uint16_t universe, uint16_t length, uint8_t sequence,
   // else if (DEBUG) Serial.println("\t NOT DRAW LEDs ");
 }
 
-// Triggers data display on first universe received, then stores data
-//
-// void onDmxFrame_first(uint16_t universe, uint16_t length, uint8_t sequence,
-// uint8_t *data)
-// {
-//   if (DEBUG)
-//   {
-//     // print out our data
-//     Serial.print("universe number = ");
-//     Serial.print(artnet.getUniverse());
-//     Serial.print("\tdata length = ");
-//     Serial.print(artnet.getLength());
-//     Serial.print("\tDMX data[0]: ");
-//     Serial.print(data[0]);
-//     Serial.print("\tsequence = ");
-//     Serial.println(sequence);
-//   }
-
-//   // first universe received, trigger display (previous stored data)
-//   if (universe == startUniverse)
-//   {
-//     if (DEBUG) Serial.println("\t DRAW LEDs");
-//     FastLED.show();
-//     flip += 1;
-//     memset(rgbarray, 0, numLeds * sizeof(CRGB));  // reset buffer (in case of
-//     missing data) -> comment to hold previousDataLength = 0;
-//   }
-
-//   // Read universe and put into the right part of the display buffer
-//   for (int i = 0; i < length / 3; i++)
-//   {
-//     int led = i + (universe - startUniverse) * (previousDataLength / 3);
-//     if (led < numLeds)
-//     {
-//       rgbarray[led] = CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
-//     }
-//   }
-
-//   previousDataLength = length;
-
-// }
-
+/**
+ * @brief Fonction d'initialisation du programme.
+ */
 void setup() {
 
 // Rewrite nodeID
@@ -312,7 +295,7 @@ void setup() {
 
   if (EEPROM.read(10) == 0 || EEPROM.read(10) >= 255) {
     if (DEBUG)
-      Serial.println("EEPROM not set.. using defaut id: 254");
+      Serial.println("EEPROM not set.. using default id: 254");
     EEPROM.write(10, 254);
   }
   delay(500);
@@ -375,12 +358,22 @@ void setup() {
     Serial.println("artnet.setArtDmxCallback");
 }
 
+/**
+ * @brief Définit la couleur RGB pour toutes les LEDs.
+ * 
+ * @param r Valeur de la composante rouge.
+ * @param g Valeur de la composante verte.
+ * @param b Valeur de la composante bleue.
+ */
 void set_rgb(int r, int g, int b) {
   for (int i = 0; i < numLeds; i++)
     rgbarray[i] = CRGB(r, g, b);
   FastLED.show();
 }
 
+/**
+ * @brief Boucle principale du programme.
+ */
 void loop() {
   // we call the read function inside the loop
   if (artnet_set == 1) {

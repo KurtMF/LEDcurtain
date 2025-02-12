@@ -1,21 +1,22 @@
-# Teensy OctoWS28 Artnet Node
-**Version: V0.2.1**
+# Teensy KxKm Artnet Node
+**Version: V1.0.0**
+# Clément SAILLANT pour KomplexKapharnaüm
 
-Studio Jordan Shaw // http://jordanshaw.com
+Ce projet est un nœud Artnet basé sur Teensy 4.1 pour contrôler jusqu'a 50 bandes LED. La Teensy 4.1 est un microcontrôleur puissant capable de piloter un grand nombre de LEDs. Ce projet utilise la bibliothèque FastLED et objectFLED pour contrôler les LEDs et la bibliothèque Artnet pour recevoir les données Artnet.
 
-This is a Artnet node built with Teensy 4.1 + OctoWS28
 * Teensy Board 4.1: https://www.pjrc.com/store/teensy41.html 
-* OctoWS28 Adaptor: https://www.pjrc.com/store/octo28_adaptor.html
 * Ethernet Kit for Teensy 4.1: https://www.pjrc.com/store/ethernet_kit.html
-* OctoWS28 Teensy Library: https://www.pjrc.com/teensy/td_libs_OctoWS2811.html 
 * FastLED: https://github.com/FastLED/FastLED
+* ObjectFLED: https://github.com/KurtMF/ObjectFLED
 * Artnet Library: https://github.com/natcl/Artnet
 
-**Note:** for Teensy 4.1, Teensyduino and the Artnet library, the following artnet.h source needs to be modified to work with 4.1.
-Modify this file to use NativeEthernet `/Users/[USER]/Library/Arduino15/packages/teensy/hardware/avr/1.58.1/libraries/Artnet/Artnet.h`
+Basé sur l'exemple original Artnet de la bibliothèque OctoWS2811 de Paul Stoffregen et inspiré par Studio Jordan Shaw // http://jordanshaw.com artnet node et la bibliothèque objectFLED de .
 
-Teensy 4.1 requires `NativeEthernet.h` and `NativeEthernetUdp.h`.
-To avoid library conflicts, it's best to uninstall the Artnet library available from within the Arduino library manager and only use the modified version included with Teensyduino. Around line ~30 in Artnet.h update the below... [the PJRC thread.](https://forum.pjrc.com/index.php?threads/does-the-artnet-library-work-with-the-native-ethernet-library.70064/)
+**Remarque:** pour Teensy 4.1, Teensyduino et la bibliothèque Artnet, le fichier artnet.h suivant doit être modifié pour fonctionner avec 4.1.
+Modifiez ce fichier pour utiliser NativeEthernet `/Users/[USER]/Library/Arduino15/packages/teensy/hardware/avr/1.58.1/libraries/Artnet/Artnet.h`
+
+Teensy 4.1 nécessite `NativeEthernet.h` et `NativeEthernetUdp.h`.
+Pour éviter les conflits de bibliothèques, il est préférable de désinstaller la bibliothèque Artnet disponible dans le gestionnaire de bibliothèques Arduino et d'utiliser uniquement la version modifiée incluse avec Teensyduino. Autour de la ligne ~30 dans Artnet.h, mettez à jour ce qui suit... [le fil PJRC.](https://forum.pjrc.com/index.php?threads/does-the-artnet-library-work-with-the-native-ethernet-library.70064/)
 
 ```
 #if defined(ARDUINO_SAMD_ZERO)
@@ -29,22 +30,24 @@ To avoid library conflicts, it's best to uninstall the Artnet library available 
 #endif
 ```
 
-## Sources from around the web that inspired and facilitated all this working
+## Sources d'inspiration et de facilitation
 
-Original Artnet example from Paul Stoffregen's OctoWS2811 library
+Exemple original Artnet de la bibliothèque OctoWS2811 de Paul Stoffregen
 https://github.com/PaulStoffregen/OctoWS2811/blob/master/examples/Artnet/Artnet.ino
 
-Inspired by CaseyJScalf's Teensy 4.1 Artnet Node w/ Madmapper
+Inspiré par le nœud Artnet Teensy 4.1 de CaseyJScalf avec Madmapper
 https://github.com/CaseyJScalf/Teensy-4.1-as-ArtNet-Node-for-5v-WS2812-LED
 
-The implimentation of the FastLED with OctoWS28 + Pin selection
+Implémentation de FastLED avec OctoWS28 + sélection de broches
 https://blinkylights.blog/2021/02/03/using-teensy-4-1-with-fastled/
 
-## Raspberry Pi
-To run on a Pi, I used a [USB ethernet adapter](https://www.amazon.ca/BENFEI-Ethernet-Compatible-Notebook-Windows7/dp/B08KWC7D78/ref=asc_df_B08KWC7D78/) for the artnet networking.
-I used the adapter IP for the artnet IP
+Implémentation de la bibliothèque ObjectFLED pour utiliser jusqu'à 50 sortie pour strip LED
+https://github.com/KurtMF/ObjectFLED
 
-## Artnet Server / Processing App
-This project was put together in tandum with a custom Processing.org app to generate the LED visuals.
-The gotchya with this is that the artnet library compatible with the Teensy/Octo setup is not the library in the Processing library manager.
-YOU MUST download and manually installed from Florian's [Artnet4j - Art-Net DMX over IP library for Java and Processing repo](https://github.com/cansik/artnet4j).
+
+## Serveur Artnet / Application Processing
+Vous pouvez utiliser une application Processing.org personnalisée pour générer les visuels LED.
+Le problème avec cela est que la bibliothèque Artnet compatible avec la configuration Teensy/Octo n'est pas la bibliothèque du gestionnaire de bibliothèques Processing.
+VOUS DEVEZ télécharger et installer manuellement depuis le dépôt de Florian [Artnet4j - Art-Net DMX over IP library for Java and Processing repo](https://github.com/cansik/artnet4j).
+
+Ce projet a été testé avec MadMapper, et il fonctionne parfaitement. Vous pouvez également utiliser QLC+ ou tout autre logiciel compatible Artnet.
