@@ -3,5 +3,6 @@
     "stm32-for-vscode.armToolchainPath": false,
     "files.associations": {
         "*.tcc": "cpp"
-    }
+    },
+    "commentTranslate.hover.enabled": true
 }
