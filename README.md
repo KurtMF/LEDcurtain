@@ -4,6 +4,11 @@
 
 Ce projet est un nœud Artnet basé sur Teensy 4.1 pour contrôler jusqu'a 50 bandes LED. La Teensy 4.1 est un microcontrôleur puissant capable de piloter un grand nombre de LEDs. Ce projet utilise la bibliothèque FastLED et objectFLED pour contrôler les LEDs et la bibliothèque Artnet pour recevoir les données Artnet.
 
+Utilisé avec les cartes suivante : 
+
+https://github.com/KomplexKapharnaum/LEDcurtain_hardware
+
+
 * Teensy Board 4.1: https://www.pjrc.com/store/teensy41.html 
 * Ethernet Kit for Teensy 4.1: https://www.pjrc.com/store/ethernet_kit.html
 * FastLED: https://github.com/FastLED/FastLED
@@ -16,7 +21,8 @@ Basé sur l'exemple original Artnet de la bibliothèque OctoWS2811 de Paul Stoff
 Modifiez ce fichier pour utiliser NativeEthernet `/Users/[USER]/Library/Arduino15/packages/teensy/hardware/avr/1.58.1/libraries/Artnet/Artnet.h`
 
 Teensy 4.1 nécessite `NativeEthernet.h` et `NativeEthernetUdp.h`.
-Pour éviter les conflits de bibliothèques, il est préférable de désinstaller la bibliothèque Artnet disponible dans le gestionnaire de bibliothèques Arduino et d'utiliser uniquement la version modifiée incluse avec Teensyduino. Autour de la ligne ~30 dans Artnet.h, mettez à jour ce qui suit... [le fil PJRC.](https://forum.pjrc.com/index.php?threads/does-the-artnet-library-work-with-the-native-ethernet-library.70064/)
+Pour éviter les conflits de bibliothèques, il est utilisé la bibliothèque Artnet modifiée incluse avec Teensyduino. Autour de la ligne ~30 dans Artnet.h
+[le fil PJRC.](https://forum.pjrc.com/index.php?threads/does-the-artnet-library-work-with-the-native-ethernet-library.70064/)
 
 ```
 #if defined(ARDUINO_SAMD_ZERO)
@@ -34,12 +40,6 @@ Pour éviter les conflits de bibliothèques, il est préférable de désinstalle
 
 Exemple original Artnet de la bibliothèque OctoWS2811 de Paul Stoffregen
 https://github.com/PaulStoffregen/OctoWS2811/blob/master/examples/Artnet/Artnet.ino
-
-Inspiré par le nœud Artnet Teensy 4.1 de CaseyJScalf avec Madmapper
-https://github.com/CaseyJScalf/Teensy-4.1-as-ArtNet-Node-for-5v-WS2812-LED
-
-Implémentation de FastLED avec OctoWS28 + sélection de broches
-https://blinkylights.blog/2021/02/03/using-teensy-4-1-with-fastled/
 
 Implémentation de la bibliothèque ObjectFLED pour utiliser jusqu'à 50 sortie pour strip LED
 https://github.com/KurtMF/ObjectFLED
