@@ -41,19 +41,23 @@
 
 // Turn on / off Serial logs for debugging
 #define DEBUG 1
-// #define ID_ETENDARD 2
+
+// define the number of ID_ETENDARD to set IP address
+const int ID_ETENDARD = 2;
+
 // Set to 1 to enable Artnet
 // Set to 0 to disable Artnet and run a test pattern
 #define artnet_set 1
 
-// Set time to wait for economy mode
+// Set time to wait for economy mode when no artnet data is received
 #define ECONOMY_MODE 3000
 unsigned long previousMillis = 0;
-// To help with longevity of LEDs and Octo Board
+// To help with longevity of LEDs and Board
 // Brightness is set to ~50% (0-255)
 
 // 50% = 30A in full white
 #define BRIGHTNESS 150
+
 
 /*
  COLOR_CORRECTION
@@ -62,33 +66,11 @@ unsigned long previousMillis = 0;
    TypicalPixelString= 0xFFE08C     255, 224, 140
    UncorrectedColor=   0xFFFFFF     255, 255, 255
  */
-
-int flip = 0;
-bool onoff() { return (flip / 15) % 2 == 0; }
-
 // #define COLOR_CORRECTION TypicalLEDStrip
 #define COLOR_CORRECTION UncorrectedColor
-
-/**
- * @brief Convertit les valeurs RGB en valeur blanche.
- * 
- * @param r Référence à la composante rouge.
- * @param g Référence à la composante verte.
- * @param b Référence à la composante bleue.
- * @return uint8_t Valeur de la composante blanche.
- */
-uint8_t white_from_rgb(uint8_t &r, uint8_t &g, uint8_t &b) {
-  r = rg8(r);
-  g = gg8(g);
-  b = bg8(b);
-
-  uint8_t w = min(r, min(g, b));
-  r -= w;
-  g -= w;
-  b -= w;
-
-  return w;
-}
+#define R_BALANCE 255
+#define G_BALANCE 255
+#define B_BALANCE 255
 
 // Throttling refresh for when using 24+ universes
 // i.e. 510 leds / 3 universes per pin
@@ -104,8 +86,9 @@ const int startUniverse = 0;
 // every device, the IP will be different. Make sure to update when changing
 // devices or environments
 
-byte ip[] = {2, 12, 0, 254}; // IP address of the node (254 is default, will be
-                             // overwritten by ID_ETENDARD read from EEPROM)
+byte ip[] = {2, 12, 0, 2}; // IP address of the node (254 is default, will be
+// overwritten by ID_ETENDARD read from EEPROM)
+
 
 // Etendard V0.1 (GRAZ)
 #if V_ETENDARD == 0
@@ -158,7 +141,7 @@ ObjectFLED dispLeds(PIX_PER_STR *numStrips, rgbarray, CORDER_GRBW, numStrips,
 
 /**
  * @brief Contrôleur pour Teensy 4 utilisant ObjectFLED.
- * 
+ *
  * @tparam RGB_ORDER Ordre des couleurs RGB.
  * @tparam CHIP Type de puce LED.
  */
@@ -169,7 +152,7 @@ class CTeensy4Controller : public CPixelLEDController<RGB_ORDER, 8, 0xFF> {
 public:
   /**
    * @brief Constructeur du contrôleur.
-   * 
+   *
    * @param _pobjectFled Pointeur vers l'objet ObjectFLED.
    */
   CTeensy4Controller(ObjectFLED *_pobjectFled) : pobjectFled(_pobjectFled){};
@@ -181,7 +164,7 @@ public:
 
   /**
    * @brief Affiche les pixels.
-   * 
+   *
    * @param pixels Contrôleur de pixels.
    */
   virtual void showPixels(PixelController<RGB_ORDER, 8, 0xFF> &pixels) {
@@ -218,7 +201,7 @@ int previousDataLength = 0;
 
 /**
  * @brief Callback pour traiter les trames DMX complètes.
- * 
+ *
  * @param universe Numéro de l'univers.
  * @param length Longueur des données.
  * @param sequence Séquence des données.
@@ -285,48 +268,33 @@ void onDmxFrame_full(uint16_t universe, uint16_t length, uint8_t sequence,
  */
 void setup() {
 
-// Rewrite nodeID
-#ifdef ID_ETENDARD
-  if (EEPROM.read(10) != ID_ETENDARD) {
-    EEPROM.write(10, ID_ETENDARD);
-    delay(200);
-  }
-#endif
-
-  if (EEPROM.read(10) == 0 || EEPROM.read(10) >= 255) {
-    if (DEBUG)
-      Serial.println("EEPROM not set.. using default id: 254");
-    EEPROM.write(10, 254);
-  }
-  delay(500);
-  if (DEBUG)
-    Serial.printf("EEPROM.read(10) = %d \n", EEPROM.read(10));
-  ip[3] = {EEPROM.read(10)}; // IP address of the node
+  eeprom_set_IP(ID_ETENDARD);
   if (DEBUG) {
     Serial.begin(115200);
     Serial.println("KXKM Etendard");
-    Serial.println("Teensy OctoWS28 Artnet Node");
+    Serial.println("Teensy Artnet Node");
     Serial.println("=================");
   }
   // begin(LED_CLK_nS, LED_T0H_nS, LED_T1H_nS, LED_Latch_Delay_uS) - specifies
   // full LED waveform timing.
   // TODO set the timing for the LED strip
   dispLeds.begin(1250, 300, 600,
-                 1000); // Utiliser ObjectFLED au lieu de OctoWS2811
+                 // TODO check and set the reset timing for the LED strip
+                 80); // Utiliser ObjectFLED au lieu de OctoWS2811
 
   if (DEBUG)
     Serial.println("dispLeds.begin");
   pcontroller = new CTeensy4Controller<RGB, WS2811_800kHz>(&dispLeds);
   if (DEBUG)
-  Serial.println("pcontroller");
+    Serial.println("pcontroller");
   FastLED.setBrightness(BRIGHTNESS);
   FastLED.addLeds(pcontroller, rgbarray, numPins * ledsPerStrip)
       .setCorrection(COLOR_CORRECTION);
-      if (DEBUG)
-  Serial.println("add led");
+  if (DEBUG)
+    Serial.println("add led");
   FastLED.delay(10000 / FRAMES_PER_SECOND);
   if (DEBUG)
-  Serial.println("fps");
+    Serial.println("fps");
   dispLeds.setBrightness(BRIGHTNESS);
   if (DEBUG)
     Serial.println("init test");
@@ -356,19 +324,9 @@ void setup() {
 
   if (DEBUG)
     Serial.println("artnet.setArtDmxCallback");
-}
-
-/**
- * @brief Définit la couleur RGB pour toutes les LEDs.
- * 
- * @param r Valeur de la composante rouge.
- * @param g Valeur de la composante verte.
- * @param b Valeur de la composante bleue.
- */
-void set_rgb(int r, int g, int b) {
-  for (int i = 0; i < numLeds; i++)
-    rgbarray[i] = CRGB(r, g, b);
-  FastLED.show();
+  // set master balance
+  setColorBalance(R_BALANCE, G_BALANCE,
+                  B_BALANCE); // balance de couleur (r,g,b)
 }
 
 /**
