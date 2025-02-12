@@ -4,6 +4,11 @@
 
 Ce projet est un nœud Artnet basé sur Teensy 4.1 pour contrôler jusqu'a 50 bandes LED. La Teensy 4.1 est un microcontrôleur puissant capable de piloter un grand nombre de LEDs. Ce projet utilise la bibliothèque FastLED et objectFLED pour contrôler les LEDs et la bibliothèque Artnet pour recevoir les données Artnet.
 
+Utilisé avec les cartes suivante : 
+
+https://github.com/KomplexKapharnaum/LEDcurtain_hardware
+
+
 * Teensy Board 4.1: https://www.pjrc.com/store/teensy41.html 
 * Ethernet Kit for Teensy 4.1: https://www.pjrc.com/store/ethernet_kit.html
 * FastLED: https://github.com/FastLED/FastLED
