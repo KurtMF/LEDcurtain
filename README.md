@@ -36,12 +36,6 @@ Pour éviter les conflits de bibliothèques, il est utilisé la bibliothèque Ar
 Exemple original Artnet de la bibliothèque OctoWS2811 de Paul Stoffregen
 https://github.com/PaulStoffregen/OctoWS2811/blob/master/examples/Artnet/Artnet.ino
 
-Inspiré par le nœud Artnet Teensy 4.1 de CaseyJScalf avec Madmapper
-https://github.com/CaseyJScalf/Teensy-4.1-as-ArtNet-Node-for-5v-WS2812-LED
-
-Implémentation de FastLED avec OctoWS28 + sélection de broches
-https://blinkylights.blog/2021/02/03/using-teensy-4-1-with-fastled/
-
 Implémentation de la bibliothèque ObjectFLED pour utiliser jusqu'à 50 sortie pour strip LED
 https://github.com/KurtMF/ObjectFLED
 
