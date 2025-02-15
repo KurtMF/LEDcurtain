@@ -92,9 +92,9 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
 }
 
 void setPixel(int index, byte r, byte g, byte b) {
-  drawingMemory[index * 3] = r;
-  drawingMemory[index * 3 + 1] = g;
-  drawingMemory[index * 3 + 2] = b;
+  channelBuffer[index * 3] = r;
+  channelBuffer[index * 3 + 1] = g;
+  channelBuffer[index * 3 + 2] = b;
 }  //setPixel()
 
 void initTest()
