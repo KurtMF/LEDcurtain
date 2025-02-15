@@ -18,16 +18,15 @@
 // OctoWS2811 settings
 const int ledsPerStrip = 492; // change for your setup
 const byte numStrips= 1; // change for your setup
-byte drawingMemory[numStrips * ledsPerStrip * 3];
 const int config = CORDER_GRB;
 uint8_t pinList[numStrips] = {10};
-ObjectFLED leds(ledsPerStrip * numStrips, drawingMemory, config, numStrips, pinList);
 
 // Artnet settings
 Artnet artnet;
 const int startUniverse = 0; // CHANGE FOR YOUR SETUP most software this is 1, some software send out artnet first universe as zero.
 const int numberOfChannels = ledsPerStrip * numStrips * 3; // Total number of channels you want to receive (1 led = 3 channels)
 byte channelBuffer[numberOfChannels]; // Combined universes into a single array
+ObjectFLED leds(ledsPerStrip * numStrips, channelBuffer, config, numStrips, pinList);
 
 // Check if we got all universes
 const int maxUniverses = numberOfChannels / 512 + ((numberOfChannels % 512) ? 1 : 0);
@@ -82,7 +81,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   }      
 
   // send to leds
-  memcpy(&drawingMemory[0], &channelBuffer[0], ledsPerStrip * numStrips * 3);
+  // no need to copy channelBuffer to drawingMemory: channelBuffer passed directly to ObjectFLED as draw buffer.
   
   if (sendFrame)
   {
