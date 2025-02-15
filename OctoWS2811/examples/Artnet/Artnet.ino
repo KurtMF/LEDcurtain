@@ -9,7 +9,8 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 #include <SPI.h>
-#include <OctoWS2811.h>
+//#include <OctoWS2811.h>
+#include <ObjectFLED.h>
 
 // Ideas for improving performance with WIZ820io / WIZ850io Ethernet:
 // https://forum.pjrc.com/threads/45760-E1-31-sACN-Ethernet-DMX-Performance-help-6-Universe-Limit-improvements
@@ -17,10 +18,10 @@
 // OctoWS2811 settings
 const int ledsPerStrip = 492; // change for your setup
 const byte numStrips= 1; // change for your setup
-DMAMEM int displayMemory[ledsPerStrip*6];
-int drawingMemory[ledsPerStrip*6];
-const int config = WS2811_GRB | WS2811_800kHz;
-OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, config);
+byte drawingMemory[numStrips * ledsPerStrip * 3];
+const int config = CORDER_GRB;
+uint8_t pinList[numStrips] = {10};
+ObjectFLED leds(ledsPerStrip * numStrips, drawingMemory, config, numStrips, pinList);
 
 // Artnet settings
 Artnet artnet;
@@ -83,8 +84,8 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   // send to leds
   for (int i = 0; i < ledsPerStrip * numStrips; i++)
   {
-    leds.setPixel(i, channelBuffer[(i) * 3], channelBuffer[(i * 3) + 1], channelBuffer[(i * 3) + 2]);
-  }      
+    memcpy(&drawingMemory[i * 3], &channelBuffer[i * 3], 3);
+  } 
   
   if (sendFrame)
   {
@@ -94,21 +95,27 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   }
 }
 
+void setPixel(int index, byte r, byte g, byte b) {
+  drawingMemory[index * 3] = r;
+  drawingMemory[index * 3 + 1] = g;
+  drawingMemory[index * 3 + 2] = b;
+}  //setPixel()
+
 void initTest()
 {
   for (int i = 0 ; i < ledsPerStrip * numStrips ; i++)
-    leds.setPixel(i, 127, 0, 0);
+    setPixel(i, 127, 0, 0);
   leds.show();
   delay(500);
   for (int i = 0 ; i < ledsPerStrip * numStrips  ; i++)
-    leds.setPixel(i, 0, 127, 0);
+    setPixel(i, 0, 127, 0);
   leds.show();
   delay(500);
   for (int i = 0 ; i < ledsPerStrip * numStrips  ; i++)
-    leds.setPixel(i, 0, 0, 127);
+    setPixel(i, 0, 0, 127);
   leds.show();
   delay(500);
   for (int i = 0 ; i < ledsPerStrip * numStrips  ; i++)
-    leds.setPixel(i, 0, 0, 0);
+    setPixel(i, 0, 0, 0);
   leds.show();
 }
